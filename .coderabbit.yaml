@@ -1,0 +1,143 @@
+# Enables IDE autocompletion for this config file
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+
+# Language for CodeRabbit's review comments
+language: en
+
+# Enable experimental features
+early_access: true
+
+chat:
+  auto_reply: true
+
+reviews:
+  auto_review:
+    enabled: true
+    ignore_title_keywords:
+      - "WIP"
+    drafts: false
+    base_branches:
+      - main
+      - develop
+
+    high_level_summary: true
+    sequence_diagrams: true
+    poem: false
+    review_status: true
+    collapse_walkthrough: false
+    changed_files_summary: true
+    request_changes_workflow: false
+
+    pre_merge_checks:
+      description:
+        mode: warning
+      docstrings:
+        mode: off
+
+    # Exclude generated / vendor / build outputs
+    path_filters:
+      - "!**/bin/**"
+      - "!**/obj/**"
+      - "!**/TestResults/**"
+      - "!**/.vs/**"
+      - "!**/packages/**"
+      - "!**/wwwroot/lib/**"
+      - "!**/Migrations/**"           # optionnel: mets-le en review si tu veux revoir les migrations EF
+      - "!**/*.g.cs"
+      - "!**/*.Designer.cs"
+
+    path_instructions:
+      # Solution & project files
+      - path: "**/*.{sln,csproj,props,targets}"
+        instructions: |
+          Review build configuration for:
+          - TargetFramework(s), implicit usings, nullable, TreatWarningsAsErrors consistency
+          - Package versions alignment to avoid downgrades (NU1605), central package management if used
+          - Deterministic builds, CI-friendly settings
+          - Secrets not committed (UserSecretsId ok, but no keys)
+
+      # C# application code
+      - path: "**/*.cs"
+        instructions: |
+          .NET/C# best practices:
+          - Nullable reference types: no hidden null risks, use required/guard clauses
+          - Exceptions: no swallowing; meaningful messages; correct exception types
+          - Logging: structured logging (ILogger), no sensitive data in logs
+          - Performance: avoid sync-over-async; avoid unnecessary allocations; use Span/Memory cautiously
+          - Clean architecture: keep controllers thin; business logic in services; DI used properly
+          - Threading: correct cancellation token propagation; no deadlocks
+          - Security: validate inputs; avoid insecure deserialization; no hardcoded secrets
+          - Code quality: naming, small methods, avoid overly generic helpers, avoid "god" services
+
+      # ASP.NET Core Web API (controllers/minimal APIs)
+      - path: "**/*Controller.cs"
+        instructions: |
+          Review API design:
+          - Correct HTTP status codes and problem details
+          - Validation (model validation / FluentValidation) and consistent error responses
+          - Authorization: [Authorize] placement, policy usage, no accidental anonymous endpoints
+          - Avoid leaking internal exceptions; use exception middleware/filters
+          - DTOs: do not expose EF entities directly
+
+      - path: "**/Program.cs"
+        instructions: |
+          Review hosting & DI:
+          - Service lifetimes correct (Singleton/Scoped/Transient)
+          - Options pattern (IOptions) for config; no direct env var parsing scattered
+          - Middleware order correctness (routing, auth, cors, exception handling)
+          - Health checks, rate limiting, CORS and security headers if applicable
+          - Secrets not logged or returned in errors
+
+      # Entity Framework Core
+      - path: "**/*DbContext.cs"
+        instructions: |
+          EF Core review:
+          - AsNoTracking for read-only queries
+          - Correct Include usage (avoid cartesian explosion); consider SplitQuery when needed
+          - Transactions usage where appropriate
+          - Migrations compatibility and provider-specific pitfalls
+          - Avoid lazy-loading surprises; avoid N+1 queries
+
+      - path: "**/Entities/**/*.cs"
+        instructions: |
+          Domain/Entities review:
+          - Encapsulation: invariants enforced, avoid public setters when possible
+          - Nullable correctness and required properties
+          - Avoid mixing persistence concerns with domain logic (where applicable)
+
+      # Configuration files
+      - path: "**/appsettings*.json"
+        instructions: |
+          Review configuration:
+          - No secrets committed (keys, connection strings with passwords, tokens)
+          - Environment overrides (Development/Staging/Production) coherent
+          - Logging levels sane; PII not enabled in prod
+          - CORS origins explicit; no wildcards unless justified
+
+      # Tests
+      - path: "**/*.{Tests,Test}/**/*.{cs,csproj}"
+        instructions: |
+          Test review:
+          - Prefer clear Arrange/Act/Assert structure
+          - Deterministic tests (no real time/network unless explicitly integration tests)
+          - Coverage of edge cases (nulls, empty, boundaries)
+          - Mock external dependencies; avoid over-mocking business logic
+          - If integration tests: containers/fixtures properly isolated
+
+      # Docker / CI
+      - path: "**/Dockerfile"
+        instructions: |
+          Docker review:
+          - Multi-stage build, minimal runtime image
+          - No secrets in image layers
+          - Use non-root user when possible
+          - Healthcheck if relevant
+          - Correct exposure of ports and environment configs
+
+      - path: "**/*.{yml,yaml}"
+        instructions: |
+          CI/CD review:
+          - Secrets via secure variables/vault, not in repo
+          - Build cache usage and reproducibility
+          - Dotnet restore/build/test steps consistent
+          - Lint/format step (dotnet format) if used
