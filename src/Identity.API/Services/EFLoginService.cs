@@ -18,10 +18,6 @@
 
         public async Task<bool> ValidateCredentials(ApplicationUser user, string password)
         {
-            if (password.Length < 3)
-            {
-                return false;
-            }
             return await _userManager.CheckPasswordAsync(user, password);
         }
 

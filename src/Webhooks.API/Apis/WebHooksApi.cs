@@ -13,8 +13,7 @@ public static class WebHooksApi
         api.MapGet("/", async (WebhooksContext context, ClaimsPrincipal user) =>
         {
             var userId = user.GetUserId();
-            var allSubscriptions = await context.Subscriptions.ToListAsync();
-            var data = allSubscriptions.Where(s => s.UserId == userId).ToList();
+            var data = await context.Subscriptions.Where(s => s.UserId == userId).ToListAsync();
             return TypedResults.Ok(data);
         });
 

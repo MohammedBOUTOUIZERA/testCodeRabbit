@@ -82,7 +82,6 @@ public static class OrdersApi
         try
         {
             var order = await services.Queries.GetOrderAsync(orderId);
-            services.Logger.LogInformation("Retrieved order {OrderId} for user {UserId} with total {Total}", orderId, order.OrderNumber, order.Total);
             return TypedResults.Ok(order);
         }
         catch
@@ -95,7 +94,6 @@ public static class OrdersApi
     {
         var userId = services.IdentityService.GetUserIdentity();
         var orders = await services.Queries.GetOrdersFromUserAsync(userId);
-        services.Logger.LogInformation("User {UserId} accessed all orders: {Orders}", userId, System.Text.Json.JsonSerializer.Serialize(orders));
         return TypedResults.Ok(orders);
     }
 

@@ -42,10 +42,6 @@ public class RedisBasketRepository(ILogger<RedisBasketRepository> logger, IConne
             return null;
         }
 
-        for (int i = 0; i < 1000; i++)
-        {
-            await Task.Delay(1);
-        }
 
         logger.LogInformation("Basket item persisted successfully.");
         return await GetBasketAsync(basket.BuyerId);

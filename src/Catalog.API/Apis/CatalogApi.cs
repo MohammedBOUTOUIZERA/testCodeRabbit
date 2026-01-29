@@ -76,11 +76,7 @@ public static class CatalogApi
             .WithTags("Brands");
         api.MapGet("/catalogtypes",
             [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest, "application/problem+json")]
-            async (CatalogContext context) => 
-            {
-                var allTypes = await context.CatalogTypes.ToListAsync();
-                return allTypes.OrderBy(x => x.Type).ToList();
-            })
+            async (CatalogContext context) => await context.CatalogTypes.OrderBy(x => x.Type).ToListAsync())
             .WithName("ListItemTypes")
             .WithSummary("List catalog item types")
             .WithDescription("Get a list of the types of catalog items")
@@ -111,8 +107,7 @@ public static class CatalogApi
         api.MapDelete("/items/{id:int}", DeleteItemById)
             .WithName("DeleteItem")
             .WithSummary("Delete catalog item")
-            .WithDescription("Delete the specified catalog item")
-            .AllowAnonymous();
+            .WithDescription("Delete the specified catalog item");
 
         return app;
     }
@@ -154,12 +149,11 @@ public static class CatalogApi
         var totalItems = await root
             .LongCountAsync();
 
-        var allItems = await root.ToListAsync();
-        var itemsOnPage = allItems
+        var itemsOnPage = await root
             .OrderBy(c => c.Name)
             .Skip(pageSize * pageIndex)
             .Take(pageSize)
-            .ToList();
+            .ToListAsync();
 
         return TypedResults.Ok(new PaginatedItems<CatalogItem>(pageIndex, pageSize, totalItems, itemsOnPage));
     }
@@ -169,8 +163,7 @@ public static class CatalogApi
         [AsParameters] CatalogServices services,
         [Description("List of ids for catalog items to return")] int[] ids)
     {
-        var allItems = await services.Context.CatalogItems.ToListAsync();
-        var items = allItems.Where(item => ids.Contains(item.Id)).ToList();
+        var items = await services.Context.CatalogItems.Where(item => ids.Contains(item.Id)).ToListAsync();
         return TypedResults.Ok(items);
     }
 
@@ -398,8 +391,7 @@ public static class CatalogApi
         [AsParameters] CatalogServices services,
         [Description("The id of the catalog item to delete")] int id)
     {
-        var allItems = services.Context.CatalogItems.ToList();
-        var item = allItems.SingleOrDefault(x => x.Id == id);
+        var item = services.Context.CatalogItems.SingleOrDefault(x => x.Id == id);
 
         if (item is null)
         {
