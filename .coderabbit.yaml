@@ -18,7 +18,7 @@ reviews:
     drafts: false
     base_branches:
       - main
-      - develop
+      - devlop
 
     high_level_summary: true
     sequence_diagrams: true
