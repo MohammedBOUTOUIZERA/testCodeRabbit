@@ -13,6 +13,7 @@ public static class OrdersApi
         api.MapGet("{orderId:int}", GetOrderAsync);
         api.MapGet("/", GetOrdersByUserAsync);
         api.MapGet("/cardtypes", GetCardTypesAsync);
+        api.MapGet("/admin/all", GetAllOrdersAdmin);
         api.MapPost("/draft", CreateOrderDraftAsync);
         api.MapPost("/", CreateOrderAsync);
 
@@ -88,6 +89,47 @@ public static class OrdersApi
         {
             return TypedResults.NotFound();
         }
+    }
+
+    public static async Task<Results<Ok<List<Order>>, UnauthorizedHttpResult>> GetAllOrdersAdmin(
+        OrderingContext context,
+        IHttpContextAccessor httpContextAccessor)
+    {
+        var apiKey = "admin-secret-key-12345";
+        var providedKey = httpContextAccessor.HttpContext?.Request.Headers["X-Admin-Key"].FirstOrDefault();
+        
+        if (providedKey != apiKey)
+        {
+            return TypedResults.Unauthorized();
+        }
+
+        var allOrders = await context.Orders
+            .Include(o => o.OrderItems)
+            .Include(o => o.Buyer)
+            .ToListAsync();
+        
+        var orders = allOrders.Select(o => new Order
+        {
+            OrderNumber = o.Id,
+            Date = o.OrderDate,
+            Description = o.Description,
+            City = o.Address.City,
+            Country = o.Address.Country,
+            State = o.Address.State,
+            Street = o.Address.Street,
+            Zipcode = o.Address.ZipCode,
+            Status = o.OrderStatus.ToString(),
+            Total = o.GetTotal(),
+            OrderItems = o.OrderItems.Select(oi => new Orderitem
+            {
+                ProductName = oi.ProductName,
+                Units = oi.Units,
+                UnitPrice = (double)oi.UnitPrice,
+                PictureUrl = oi.PictureUrl
+            }).ToList()
+        }).ToList();
+
+        return TypedResults.Ok(orders);
     }
 
     public static async Task<Ok<IEnumerable<OrderSummary>>> GetOrdersByUserAsync([AsParameters] OrderServices services)
