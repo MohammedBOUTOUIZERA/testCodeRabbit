@@ -47,5 +47,6 @@ public static class Extensions
         }
 
         builder.Services.AddScoped<ICatalogAI, CatalogAI>();
+        builder.Services.AddScoped<SearchService>();
     }
 }
